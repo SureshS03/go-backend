@@ -7,7 +7,7 @@ import (
 )
 
 type router struct{
-	routes map[string]map[string]http.HandlerFunc //path method functions
+	routes map[string]map[string]http.HandlerFunc
 }
 
 func NewRouter(db *sql.DB) *router {
@@ -23,7 +23,6 @@ func NewRouter(db *sql.DB) *router {
 
 func (r *router) addNewRoutes(method string, path string, handlerFunction http.HandlerFunc)  {
 	if r.routes[path] == nil{
-		fmt.Println("no path so creating newpath")
 		r.routes[path] = make(map[string]http.HandlerFunc)
 	}
 	r.routes[path][method] = handlerFunction
