@@ -15,9 +15,14 @@ func NewService(db *sql.DB) *service{
 }
 
 func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
+	err := AuthChecker(w, req)
+	if err != nil{
+		http.Error(w, "bad token", 600)
+		return
+	}
 	user := User{}
 	q :=`INSERT INTO users (user_name, mail, password, bio) VALUES ($1, $2, $3, $4) RETURNING id`
-	err := RequestReader(req, &user)
+	err = RequestReader(req, &user)
 	if err != nil {
 		fmt.Println("add user err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
@@ -32,6 +37,11 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 
 func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
 	q := `SELECT id, user_name, mail, no_of_post, bio, created_at FROM "users"`
+	err := AuthChecker(w, req)
+	if err != nil{
+		http.Error(w, "bad token", 600)
+		return
+	}
 	rows, err := s.DB.Query(q)
 	if err != nil {
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
