@@ -1,5 +1,6 @@
 package main
-//TODO add more function and add security
+//TODO add more function
+//redis the cicd in github action
 import (
 	"fmt"
 	"net/http"
