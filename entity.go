@@ -12,7 +12,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type post struct {
+type Post struct {
 	ID 		string `json:"id"`
 	User      User   `json:"user"`
 	URl       string `json:"url"`
