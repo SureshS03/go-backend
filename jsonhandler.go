@@ -22,7 +22,7 @@ func PostResponseWriter(w http.ResponseWriter, res interface{}) {
 	encoder.Encode(res)
 }
 
-func RequestReader(req *http.Request, res interface{}) error{
+func RequestReader(req *http.Request, res any) error{
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(res)
 	fmt.Println(decoder)
