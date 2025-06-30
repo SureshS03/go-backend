@@ -21,7 +21,7 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	user := User{}
-	q := `INSERT INTO users (user_name, mail, password, bio) VALUES ($1, $2, $3, $4) RETURNING id`
+	q := `INSERT INTO users (username, mail, password, bio) VALUES ($1, $2, $3, $4) RETURNING id`
 	err = RequestReader(req, &user)
 	if err != nil {
 		fmt.Println("add user err", err)
@@ -36,7 +36,7 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
-	q := `SELECT id, user_name, mail, no_of_post, bio, created_at FROM "users"`
+	q := `SELECT id, username, mail, no_of_post, bio, created_at FROM "users"`
 	err := AuthChecker(w, req)
 	if err != nil {
 		http.Error(w, "bad token", 600)
@@ -73,7 +73,7 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 	}
 	id := GetParam(req, "id")
 	user := &User{}
-	q := `SELECT id, user_name, mail, no_of_post, bio, created_at FROM "users" WHERE id = ($1)`
+	q := `SELECT id, username, mail, no_of_post, bio, created_at FROM "users" WHERE id = ($1)`
 	err = s.DB.QueryRow(q, id).Scan(&user.ID, &user.UserName, &user.Mail, &user.NoOfPost, &user.Bio, &user.CreatedAt)
 	if err != nil {
 		http.Error(w, "DATABASE Err", http.StatusInternalServerError)

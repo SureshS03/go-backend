@@ -18,9 +18,9 @@ func NewRouter(db *sql.DB) *router {
 	}
 
 	s := NewService(db)
-	r.addRoute("POST", "/user", s.AddUser)
-	r.addRoute("GET", "/user", s.GetAllUser)
-	r.addRoute("GET", "/user/:id", s.GetUser)
+	r.addRoute("POST", "/user/", s.AddUser)
+	r.addRoute("GET", "/user/", s.GetAllUser)
+	r.addRoute("GET", "/user/:id/", s.GetUser)
 
 	return r
 }
