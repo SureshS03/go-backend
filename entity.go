@@ -13,9 +13,14 @@ type User struct {
 }
 
 type Post struct {
-	ID 		string `json:"id"`
-	User      User   `json:"user"`
-	URl       string `json:"url"`
-	Like      uint   `json:"like"`
-	CreatedAt time.Time `json:"created_at"`
+	ID 		string 
+	User      User
+	URl       string
+	Like      uint
+	CreatedAt time.Time
+}
+
+type CreationPost struct {
+	UserId int `json:"user_id"`
+	URL string `json:"url"`
 }

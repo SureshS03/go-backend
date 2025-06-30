@@ -21,6 +21,7 @@ func NewRouter(db *sql.DB) *router {
 	r.addRoute("POST", "/user/", s.AddUser)
 	r.addRoute("GET", "/user/", s.GetAllUser)
 	r.addRoute("GET", "/user/:id/", s.GetUser)
+	r.addRoute("POST", "/posts/", s.Addpost)
 
 	return r
 }

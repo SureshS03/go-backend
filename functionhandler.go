@@ -81,3 +81,37 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 	}
 	GetResponseWriter(w, user)
 }
+
+func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
+	err := AuthChecker(w, req)
+	if err != nil {
+		http.Error(w, "bad token", 600)
+		return
+	}
+	CreationPost := &CreationPost{}
+	post := &Post{}
+	err = RequestReader(req, CreationPost)
+	if err != nil {
+		fmt.Println(err)
+	}
+	q := `INSERT INTO posts (user_id, url) VALUES ($1, $2) RETURNING id`
+	err = s.DB.QueryRow(q, &CreationPost.UserId, &CreationPost.URL).Scan(&post.ID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	tx, err := s.DB.Begin()
+	if err != nil {
+		fmt.Println(err)
+	}
+	incq := `UPDATE users SET no_of_post = no_of_post + 1 WHERE id = $1`
+	_, err = tx.Exec(incq, &CreationPost.UserId)
+	if err != nil {
+		tx.Rollback()
+		fmt.Println(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println(err)
+	}
+	PostResponseWriter(w, CreationPost)
+}
