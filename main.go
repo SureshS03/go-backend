@@ -1,5 +1,5 @@
 package main
-//TODO add more function
+//TODO add get posts by user
 //redis the cicd in github action
 import (
 	"fmt"
