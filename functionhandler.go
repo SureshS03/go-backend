@@ -115,3 +115,50 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	}
 	PostResponseWriter(w, CreationPost)
 }
+
+func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("get users post all")
+	err := AuthChecker(w, req)
+	if err != nil {
+		fmt.Println(err)
+		return 
+	}
+	id := GetParam(req, "user_id")
+	var posts []Post
+	q := `SELECT * FROM posts WHERE user_id = ($1)`
+	rows, err:= s.DB.Query(q, id)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		temp := Post{}
+		err = rows.Scan(temp.ID, temp.User.ID, temp.URl, temp.Like, temp.CreatedAt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		posts = append(posts, temp)
+	}
+	if err = rows.Err(); err != nil {
+		fmt.Println(err)
+		http.Error(w, "DATABASE Err", http.StatusInternalServerError)
+	}
+	GetResponseWriter(w, posts)
+	fmt.Println("done sending respones")
+}
+
+func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("called get a single post by id")
+	err := AuthChecker(w, req)
+	if err != nil{
+		fmt.Println(err)
+	}
+	q := `SELECT * FROM posts WHERE id = ($1) RETRUNING id`
+	id := GetParam(req, "id")
+	post := &Post{}
+	err = s.DB.QueryRow(q, id).Scan(post.ID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	GetResponseWriter(w, post)
+}
