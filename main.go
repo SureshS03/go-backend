@@ -1,6 +1,6 @@
 package main
-//TODO add get posts by user
-//redis , docker hosting, and kubunets cicd in github action
+//TODO TEST APIs
+//redis (started), docker hosting, and kubunets cicd in github action
 import (
 	"fmt"
 	"net/http"
