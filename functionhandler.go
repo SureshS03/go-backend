@@ -124,20 +124,20 @@ func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
 		return 
 	}
 	id := GetParam(req, "user_id")
-	var posts []Post
-	q := `SELECT * FROM posts WHERE user_id = ($1)`
+	var posts []GetPost
+	q := `SELECT id, user_id, url, likes, created_at FROM "posts" WHERE user_id = ($1)`
 	rows, err:= s.DB.Query(q, id)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		temp := Post{}
-		err = rows.Scan(temp.ID, temp.User.ID, temp.URl, temp.Like, temp.CreatedAt)
+		temp := &GetPost{}
+		err = rows.Scan(&temp.Id, &temp.UserID, &temp.URL, &temp.Like, &temp.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
 		}
-		posts = append(posts, temp)
+		posts = append(posts, *temp)
 	}
 	if err = rows.Err(); err != nil {
 		fmt.Println(err)
@@ -153,10 +153,11 @@ func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 	if err != nil{
 		fmt.Println(err)
 	}
-	q := `SELECT * FROM posts WHERE id = ($1) RETRUNING id`
+	q := `SELECT id, user_id, url, likes, created_at FROM "posts" WHERE id = ($1)`
 	id := GetParam(req, "id")
-	post := &Post{}
-	err = s.DB.QueryRow(q, id).Scan(post.ID)
+	fmt.Println("id id", id)
+	post := &GetPost{}
+	err = s.DB.QueryRow(q, id).Scan(&post.Id, &post.UserID, &post.URL, &post.Like, &post.CreatedAt)
 	if err != nil {
 		fmt.Println(err)
 	}
