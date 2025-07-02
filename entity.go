@@ -24,3 +24,11 @@ type CreationPost struct {
 	UserId int `json:"user_id"`
 	URL string `json:"url"`
 }
+
+type GetPost struct {
+	Id int `json:"id"`
+	UserID int `json:"user_id"`
+	URL string `json:"url"`
+	Like uint `json:"likes"`
+	CreatedAt time.Time `json:"created_at"`
+}
