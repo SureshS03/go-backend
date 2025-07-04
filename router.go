@@ -73,9 +73,7 @@ func matchPath(routePath, reqPath string) (bool, map[string]string) {
 		fmt.Println(i)
 		if strings.HasPrefix(routeParts[i], ":") {
 			key := strings.TrimPrefix(routeParts[i], ":")
-			fmt.Println("key", key)
 			params[key] = reqParts[i]
-			fmt.Println("value", params[key])
 			fmt.Println(params)
 		} else if routeParts[i] != reqParts[i] {
 			return false, nil
