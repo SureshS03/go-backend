@@ -104,7 +104,7 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	q := `INSERT INTO posts (user_id, url) VALUES ($1, $2) RETURNING *`
+	q := `INSERT INTO posts (user_id, url) VALUES ($1, $2) RETURNING id, user_id, url, likes, created_at`
 	fmt.Println("user_id:", CreationPost.UserId)
 	err = s.DB.QueryRow(q, &CreationPost.UserId, &CreationPost.URL).Scan(&post.ID, &post.User, &post.URl, &post.Like, &post.CreatedAt)
 	if err != nil {
