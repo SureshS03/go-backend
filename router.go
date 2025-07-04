@@ -22,7 +22,7 @@ func NewRouter(db *sql.DB) *router {
 	r.addRoute("GET", "/user/", s.GetAllUser)
 	r.addRoute("GET", "/user/:id/", s.GetUser)
 	r.addRoute("POST", "/posts/", s.Addpost)
-	r.addRoute("GET", "/posts/user/:user_id", s.GetUserPost) //Need to test
+	r.addRoute("GET", "/posts/user/:user_id", s.GetUserPost)
 	r.addRoute("GET", "/posts/:id", s.GetPost)
 
 	return r
@@ -50,7 +50,6 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	for routePath, handler := range methodRoutes {
 		if match, params := matchPath(routePath, req.URL.Path); match {
-			fmt.Println("Matched path", routePath, "with", req.URL.Path)
 			req = addParamsToRequest(req, params)
 			handler(w, req)
 			return
