@@ -13,3 +13,8 @@ func GetCache(key string) (string, error) {
 func DeleteCache(key string) error {
 	return Client.Del(Ctx, key).Err()
 }
+
+func CacheExists(key string) bool {
+	count, err := Client.Exists(Ctx, key).Result()
+	return err == nil && count > 0
+}
