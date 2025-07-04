@@ -35,3 +35,29 @@ func GetUserCache(id string) (*User, error) {
 
 	return &user, nil
 }
+
+func SetPostCache(post Post) error {
+	data, err := json.Marshal(post)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return redis.SetCache("post:"+post.ID, string(data), time.Minute * 8)
+}
+
+func GetPostCache(id string) (*Post, error) {
+	data, err:= redis.GetCache("post:"+id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	var post Post
+	err = json.Unmarshal([]byte(data), &post)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return &post, nil
+}
