@@ -1,6 +1,6 @@
 package main
 
-//TODO add redis func for remaings
+//TODO inc in cache no_of_post
 //docker hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
