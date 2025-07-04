@@ -4,8 +4,8 @@ package main
 //docker hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
-	"net/http"
 	"github.com/SureshS03/goconnect/internal/redis"
+	"net/http"
 	//"os"
 )
 
@@ -17,7 +17,7 @@ func main() {
 	defer db.Close()
 	router := NewRouter(db)
 	server := http.Server{
-		Addr: ":8080",
+		Addr:    ":8080",
 		Handler: router,
 	}
 	fmt.Println(server.Addr)

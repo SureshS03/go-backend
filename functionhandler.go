@@ -87,7 +87,7 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		GetResponseWriter(w, user)
-		return 
+		return
 	}
 	GetResponseWriter(w, userRD)
 }
@@ -114,7 +114,7 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	err = SetPostCache(*post)
 	if err != nil {
 		fmt.Println("err in set post acache", err)
-		
+
 	}
 	tx, err := s.DB.Begin()
 	if err != nil {
@@ -138,12 +138,12 @@ func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
 	err := AuthChecker(w, req)
 	if err != nil {
 		fmt.Println(err)
-		return 
+		return
 	}
 	id := GetParam(req, "user_id")
 	var posts []Post
 	q := `SELECT id, user_id, url, likes, created_at FROM "posts" WHERE user_id = ($1)`
-	rows, err:= s.DB.Query(q, id)
+	rows, err := s.DB.Query(q, id)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -166,17 +166,17 @@ func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
 func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("called get a single post by id")
 	err := AuthChecker(w, req)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 	id := GetParam(req, "id")
 	post, err := GetPostCache(id)
-	fmt.Println("post in cache,",post)
+	fmt.Println("post in cache,", post)
 	if err != nil {
 		fmt.Println("get from db")
 		q := `SELECT id, user_id, url, likes, created_at FROM "posts" WHERE id = ($1)`
 		post := &Post{}
-	
+
 		err = s.DB.QueryRow(q, id).Scan(&post.ID, &post.User, &post.URl, &post.Like, &post.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
@@ -184,6 +184,6 @@ func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 		GetResponseWriter(w, post)
 		return
 	}
-	
+
 	GetResponseWriter(w, post)
 }
