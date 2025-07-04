@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,15 +29,23 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println("add user err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
+		return
+	}
+	if strings.Contains(user.Mail, "@") && strings.Contains(user.Mail, ".") {
+		fmt.Println("invaild mail")
+		http.Error(w, "Invalid Mail", http.StatusNonAuthoritativeInfo)
+		return
 	}
 	err = s.DB.QueryRow(q, &user.UserName, &user.Mail, &user.Password, &user.Bio).Scan(&user.ID)
 	if err != nil {
 		fmt.Println("query row err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
+		return
 	}
 	err = SetUserCache(*user, time.Minute*8)
 	if err != nil {
 		fmt.Println("error in set cache")
+		return
 	}
 	PostResponseWriter(w, user)
 }
@@ -51,6 +60,7 @@ func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
 	rows, err := s.DB.Query(q)
 	if err != nil {
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
+		return
 	}
 	defer rows.Close()
 	user := []User{}
@@ -60,15 +70,16 @@ func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "DATABASE Err", http.StatusInternalServerError)
+			return
 		}
 		user = append(user, *temp)
 	}
 	if err = rows.Err(); err != nil {
 		fmt.Println(err)
 		http.Error(w, "DATABASE Err", http.StatusInternalServerError)
+		return
 	}
 	GetResponseWriter(w, user)
-	fmt.Println("done sending respones")
 }
 
 func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
@@ -78,6 +89,10 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	id := GetParam(req, "id")
+	if id == "" {
+		http.Error(w, "missing id param", 400)
+		return
+	}
 	userRD, err := GetUserCache(id)
 	if err != nil {
 		fmt.Println("getting from DB")
@@ -110,31 +125,36 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	err = RequestReader(req, CreationPost)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	q := `INSERT INTO posts (user_id, url) VALUES ($1, $2) RETURNING id, user_id, url, likes, created_at`
 	fmt.Println("user_id:", CreationPost.UserId)
 	err = s.DB.QueryRow(q, &CreationPost.UserId, &CreationPost.URL).Scan(&post.ID, &post.User, &post.URl, &post.Like, &post.CreatedAt)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	err = SetPostCache(*post, time.Minute*8)
 	if err != nil {
 		fmt.Println("err in set post acache", err)
-
+		return
 	}
 	tx, err := s.DB.Begin()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	incq := `UPDATE users SET no_of_post = no_of_post + 1 WHERE id = $1`
 	_, err = tx.Exec(incq, &CreationPost.UserId)
 	if err != nil {
 		tx.Rollback()
 		fmt.Println(err)
+		return
 	}
 	err = tx.Commit()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	var user_id string = strconv.Itoa(post.User)
 	err = IncPostsInUser(user_id)
@@ -180,6 +200,7 @@ func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 	err := AuthChecker(w, req)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	id := GetParam(req, "id")
 	post, err := GetPostCache(id)
@@ -192,6 +213,7 @@ func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 		err = s.DB.QueryRow(q, id).Scan(&post.ID, &post.User, &post.URl, &post.Like, &post.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		err = SetPostCache(*post, time.Minute*3)
 		if err != nil {
