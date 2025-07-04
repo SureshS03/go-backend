@@ -32,6 +32,10 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("query row err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
 	}
+	err = SetUserCache(user)
+	if err != nil {
+		fmt.Println("error in set cache")
+	}
 	PostResponseWriter(w, user)
 }
 
@@ -72,14 +76,20 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	id := GetParam(req, "id")
-	user := &User{}
-	q := `SELECT id, username, mail, no_of_post, bio, created_at FROM "users" WHERE id = ($1)`
-	err = s.DB.QueryRow(q, id).Scan(&user.ID, &user.UserName, &user.Mail, &user.NoOfPost, &user.Bio, &user.CreatedAt)
+	userRD, err := GetUserCache(id)
 	if err != nil {
-		http.Error(w, "DATABASE Err", http.StatusInternalServerError)
-		return
+		fmt.Println("getting from DB")
+		user := &User{}
+		q := `SELECT id, username, mail, no_of_post, bio, created_at FROM "users" WHERE id = ($1)`
+		err = s.DB.QueryRow(q, id).Scan(&user.ID, &user.UserName, &user.Mail, &user.NoOfPost, &user.Bio, &user.CreatedAt)
+		if err != nil {
+			http.Error(w, "DATABASE Err", http.StatusInternalServerError)
+			return
+		}
+		GetResponseWriter(w, user)
+		return 
 	}
-	GetResponseWriter(w, user)
+	GetResponseWriter(w, userRD)
 }
 
 func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
