@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type service struct {
@@ -20,9 +22,9 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "bad token", 600)
 		return
 	}
-	user := User{}
+	user := &User{}
 	q := `INSERT INTO users (username, mail, password, bio) VALUES ($1, $2, $3, $4) RETURNING id`
-	err = RequestReader(req, &user)
+	err = RequestReader(req, user)
 	if err != nil {
 		fmt.Println("add user err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
@@ -32,7 +34,7 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("query row err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
 	}
-	err = SetUserCache(user)
+	err = SetUserCache(*user, time.Minute*8)
 	if err != nil {
 		fmt.Println("error in set cache")
 	}
@@ -86,6 +88,11 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "DATABASE Err", http.StatusInternalServerError)
 			return
 		}
+		err = SetUserCache(*user, time.Minute*3)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		GetResponseWriter(w, user)
 		return
 	}
@@ -110,8 +117,7 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(post)
-	err = SetPostCache(*post)
+	err = SetPostCache(*post, time.Minute*8)
 	if err != nil {
 		fmt.Println("err in set post acache", err)
 
@@ -129,6 +135,12 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 	err = tx.Commit()
 	if err != nil {
 		fmt.Println(err)
+	}
+	var user_id string = strconv.Itoa(post.User)
+	err = IncPostsInUser(user_id)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	PostResponseWriter(w, post)
 }
@@ -180,6 +192,11 @@ func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 		err = s.DB.QueryRow(q, id).Scan(&post.ID, &post.User, &post.URl, &post.Like, &post.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
+		}
+		err = SetPostCache(*post, time.Minute*3)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 		GetResponseWriter(w, post)
 		return
