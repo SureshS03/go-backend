@@ -1,7 +1,7 @@
 package main
 
-//TODO TEST APIs
-//redis (started), docker hosting, and kubunets cicd in github action
+//TODO add redis func for remaings
+//docker hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
 	"net/http"
