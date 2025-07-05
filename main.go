@@ -1,6 +1,6 @@
 package main
 
-//TODO //ADD wrap chain to all and test
+//TODO //test and Auth token problem 
 //docker hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
