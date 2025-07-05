@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/SureshS03/goconnect/internal/redis"
 	"net/http"
 	"strings"
-	"github.com/SureshS03/goconnect/internal/redis"
 )
 
 type router struct {
@@ -17,15 +17,16 @@ func NewRouter(db *sql.DB) *router {
 	r := &router{
 		routes: make(map[string]map[string]http.HandlerFunc),
 	}
-	//ADD wrap chain to all and test
+
 	s := NewService(db)
+	
 	r.addRoute("POST", "/user/", WrapChain(s.AddUser, LogRequestMiddleware, SecureHeadersMiddleware))
 	r.addRoute("GET", "/user/", WrapChain(s.GetAllUser, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("GET", "/user/:id/", WrapChain(s.GetUser, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("POST", "/posts/", WrapChain(s.Addpost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("GET", "/posts/user/:user_id", WrapChain(s.GetUserPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("GET", "/posts/:id", WrapChain(s.GetPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
-	r.addRoute("GET", "/tokengen/", WrapChain(s.GenToken, LogRequestMiddleware, SecureHeadersMiddleware))
+	r.addRoute("POST", "/login/", WrapChain(s.UserLogin, LogRequestMiddleware, SecureHeadersMiddleware))
 
 	return r
 }
@@ -72,11 +73,9 @@ func matchPath(routePath, reqPath string) (bool, map[string]string) {
 
 	params := make(map[string]string)
 	for i := range reqParts {
-		fmt.Println(i)
 		if strings.HasPrefix(routeParts[i], ":") {
 			key := strings.TrimPrefix(routeParts[i], ":")
 			params[key] = reqParts[i]
-			fmt.Println(params)
 		} else if routeParts[i] != reqParts[i] {
 			return false, nil
 		}
@@ -110,41 +109,35 @@ func WrapChain(h http.HandlerFunc, mws ...func(http.Handler) http.Handler) http.
 	return final.ServeHTTP
 }
 
-
 func LogRequestMiddleware(next http.Handler) http.Handler {
-	fmt.Println("log called")
-  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("LOG %s - %s %s %s\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
-    
-    next.ServeHTTP(w, r)
-  })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("LOG %s - %s %s %s\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func SecureHeadersMiddleware(next http.Handler) http.Handler {
-	fmt.Println("secure called")
-  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("X-XSS-Protection", "1; mode-block")
-    w.Header().Set("X-Frame-Options", "deny")
-    
-    next.ServeHTTP(w, r)
-  })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-XSS-Protection", "1; mode-block")
+		w.Header().Set("X-Frame-Options", "deny")
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func AuthMiddleWare(next http.Handler) http.Handler {
-	fmt.Println("auth called")
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		bearerToken := req.Header.Get("Authorization")
 		fmt.Println(bearerToken)
 		token := strings.Split(bearerToken, " ")[1]
-		fmt.Println("token in req", token)
-		rdToken, err := redis.GetCache("token:" + token)
-		fmt.Println("rd token", rdToken)
+		user_id, err := redis.GetCache("token:"+token)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Create Token First", 600)
-			return 
+			return
 		}
-		if token != rdToken {
+		if user_id == "" {
 			http.Error(w, "Invalid Token", 600)
 		}
 		next.ServeHTTP(w, req)
