@@ -12,6 +12,11 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type LoginUser struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Post struct {
 	ID        string    `json:"id"`
 	User      int       `json:"user_id"`
