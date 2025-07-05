@@ -1,12 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+	"github.com/SureshS03/goconnect/internal/redis"
 )
 
 type service struct {
@@ -15,6 +18,27 @@ type service struct {
 
 func NewService(db *sql.DB) *service {
 	return &service{DB: db}
+}
+
+func (s *service) GenToken(w http.ResponseWriter, req * http.Request) {
+	t := make([]byte, 20)
+	if _, err := rand.Read(t); err != nil {
+		fmt.Println("err in get token", err)
+		return 
+	}
+	i := make([]byte, 5)
+	if _, err := rand.Read(i); err != nil {
+		fmt.Println("err in get token", err)
+		return 
+	}
+	istr := string(i[:])
+	tEncode := hex.EncodeToString(t)
+	err := redis.SetCache("token:"+istr, tEncode, time.Minute*10)
+	if err != nil {
+		fmt.Println(err)
+		return 
+	}
+	GetResponseWriter(w, tEncode)
 }
 
 func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
