@@ -1,7 +1,7 @@
 package main
 
-//TODO //test and Auth token problem 
-//docker hosting, and kubunets ,cicd in github action
+//TODO write a docker file with backend, DB, redis all
+//docker , hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
 	"github.com/SureshS03/goconnect/internal/redis"
