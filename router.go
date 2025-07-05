@@ -24,9 +24,10 @@ func NewRouter(db *sql.DB) *router {
 	r.addRoute("GET", "/user/", WrapChain(s.GetAllUser, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("GET", "/user/:id/", WrapChain(s.GetUser, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("POST", "/posts/", WrapChain(s.Addpost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
-	r.addRoute("GET", "/posts/user/:user_id", WrapChain(s.GetUserPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
-	r.addRoute("GET", "/posts/:id", WrapChain(s.GetPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
+	r.addRoute("GET", "/posts/user/:user_id/", WrapChain(s.GetUserPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
+	r.addRoute("GET", "/posts/:id/", WrapChain(s.GetPost, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 	r.addRoute("POST", "/login/", WrapChain(s.UserLogin, LogRequestMiddleware, SecureHeadersMiddleware))
+	r.addRoute("DELETE", "/user/:id/", WrapChain(s.DelUser, LogRequestMiddleware, SecureHeadersMiddleware, AuthMiddleWare))
 
 	return r
 }
@@ -129,7 +130,6 @@ func SecureHeadersMiddleware(next http.Handler) http.Handler {
 func AuthMiddleWare(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		bearerToken := req.Header.Get("Authorization")
-		fmt.Println(bearerToken)
 		token := strings.Split(bearerToken, " ")[1]
 		user_id, err := redis.GetCache("token:"+token)
 		if err != nil {
