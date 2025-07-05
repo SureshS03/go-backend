@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"github.com/SureshS03/goconnect/internal/redis"
 )
 
 type router struct {
@@ -16,14 +17,15 @@ func NewRouter(db *sql.DB) *router {
 	r := &router{
 		routes: make(map[string]map[string]http.HandlerFunc),
 	}
-
+	//ADD wrap chain to all and test
 	s := NewService(db)
-	r.addRoute("POST", "/user/", s.AddUser)
+	r.addRoute("POST", "/user/", WrapChain(s.AddUser, LogRequestMiddleware, SecureHeadersMiddleware))
 	r.addRoute("GET", "/user/", s.GetAllUser)
 	r.addRoute("GET", "/user/:id/", s.GetUser)
 	r.addRoute("POST", "/posts/", s.Addpost)
 	r.addRoute("GET", "/posts/user/:user_id", s.GetUserPost)
 	r.addRoute("GET", "/posts/:id", s.GetPost)
+	r.addRoute("GET", "/tokengen/", s.GenToken)
 
 	return r
 }
@@ -98,4 +100,47 @@ func GetParam(r *http.Request, key string) string {
 		return str
 	}
 	return ""
+}
+
+func WrapChain(h http.HandlerFunc, mws ...func(http.Handler) http.Handler) http.HandlerFunc {
+	final := http.Handler(http.HandlerFunc(h))
+	for _, mw := range mws {
+		final = mw(final)
+	}
+	return final.ServeHTTP
+}
+
+
+func LogRequestMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    fmt.Printf("LOG %s - %s %s %s\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+    
+    next.ServeHTTP(w, r)
+  })
+}
+
+func SecureHeadersMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("X-XSS-Protection", "1; mode-block")
+    w.Header().Set("X-Frame-Options", "deny")
+    
+    next.ServeHTTP(w, r)
+  })
+}
+
+func AuthMiddleWare(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		bearerToken := req.Header.Get("Authorization")
+		token := strings.Split(bearerToken, "")[1]
+		fmt.Println("token in req", token)
+		rdToken, err := redis.GetCache("token:" + token)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "UnAuthorization", 600)
+		}
+		if token != rdToken {
+			http.Error(w, "UnAuthorization", 600)
+		}
+		next.ServeHTTP(w, req)
+	})
 }
