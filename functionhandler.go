@@ -32,6 +32,7 @@ func (s *service) GenToken(w http.ResponseWriter, req * http.Request) {
 		return 
 	}
 	istr := string(i[:])
+	fmt.Println(istr)
 	tEncode := hex.EncodeToString(t)
 	err := redis.SetCache("token:"+istr, tEncode, time.Minute*10)
 	if err != nil {
@@ -42,14 +43,9 @@ func (s *service) GenToken(w http.ResponseWriter, req * http.Request) {
 }
 
 func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
-	err := AuthChecker(w, req)
-	if err != nil {
-		http.Error(w, "bad token", 600)
-		return
-	}
 	user := &User{}
 	q := `INSERT INTO users (username, mail, password, bio) VALUES ($1, $2, $3, $4) RETURNING id`
-	err = RequestReader(req, user)
+	err := RequestReader(req, user)
 	if err != nil {
 		fmt.Println("add user err", err)
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
@@ -76,11 +72,6 @@ func (s *service) AddUser(w http.ResponseWriter, req *http.Request) {
 
 func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
 	q := `SELECT id, username, mail, no_of_post, bio, created_at FROM "users"`
-	err := AuthChecker(w, req)
-	if err != nil {
-		http.Error(w, "bad token", 600)
-		return
-	}
 	rows, err := s.DB.Query(q)
 	if err != nil {
 		http.Error(w, "Bad Request Err", http.StatusBadRequest)
@@ -107,11 +98,6 @@ func (s *service) GetAllUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
-	err := AuthChecker(w, req)
-	if err != nil {
-		http.Error(w, "bad token", 600)
-		return
-	}
 	id := GetParam(req, "id")
 	if id == "" {
 		http.Error(w, "missing id param", 400)
@@ -139,14 +125,9 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
-	err := AuthChecker(w, req)
-	if err != nil {
-		http.Error(w, "bad token", 600)
-		return
-	}
 	CreationPost := &CreationPost{}
 	post := &Post{}
-	err = RequestReader(req, CreationPost)
+	err := RequestReader(req, CreationPost)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -191,11 +172,6 @@ func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
 
 func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("get users post all")
-	err := AuthChecker(w, req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	id := GetParam(req, "user_id")
 	var posts []Post
 	q := `SELECT id, user_id, url, likes, created_at FROM "posts" WHERE user_id = ($1)`
@@ -221,11 +197,6 @@ func (s *service) GetUserPost(w http.ResponseWriter, req *http.Request) {
 
 func (s *service) GetPost(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("called get a single post by id")
-	err := AuthChecker(w, req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	id := GetParam(req, "id")
 	post, err := GetPostCache(id)
 	fmt.Println("post in cache,", post)

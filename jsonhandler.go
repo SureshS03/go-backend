@@ -33,7 +33,7 @@ func RequestReader(req *http.Request, res any) error {
 
 	return nil
 }
-
+/*
 func AuthChecker(w http.ResponseWriter, req *http.Request) error {
 	token := req.Header.Get("Token")
 
@@ -49,3 +49,4 @@ func AuthChecker(w http.ResponseWriter, req *http.Request) error {
 
 	return nil
 }
+*/
