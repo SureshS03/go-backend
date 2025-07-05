@@ -25,7 +25,6 @@ func PostResponseWriter(w http.ResponseWriter, res interface{}) {
 func RequestReader(req *http.Request, res any) error {
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(res)
-	fmt.Println(decoder)
 	if err != nil {
 		fmt.Println(err)
 		return nil
