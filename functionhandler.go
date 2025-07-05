@@ -48,7 +48,7 @@ func (s *service) UserLogin(w http.ResponseWriter, req *http.Request) {
 	err = s.DB.QueryRow(q, &user.UserName, &user.Password).Scan(&id)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Input", http.StatusBadRequest)
 		return
 	}
 	strid := strconv.Itoa(*id)
@@ -140,6 +140,54 @@ func (s *service) GetUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	GetResponseWriter(w, userRD)
+}
+
+func (s *service) DelUser(w http.ResponseWriter, req *http.Request) {
+	bearerToken := req.Header.Get("Authorization")
+	token := strings.Split(bearerToken, " ")[1]
+	user_id, err := redis.GetCache("token:"+token)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "UnAuthorization", 600)
+		return
+	}
+	if user_id == "" {
+		http.Error(w, "UnAuthorization", 600)
+	}
+	reqid := GetParam(req, "id")
+	if reqid != user_id {
+		http.Error(w, "UnAuthorization", 600)
+		return
+	}
+
+	q := `DELETE FROM users WHERE id = ($1)`
+	tx, err := s.DB.Begin()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	id, err := strconv.Atoi(user_id)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	_, err = tx.Exec(q, &id)
+	if err != nil {
+		tx.Rollback()
+		fmt.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		fmt.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	GetResponseWriter(w, "User Deleted!")
 }
 
 func (s *service) Addpost(w http.ResponseWriter, req *http.Request) {
