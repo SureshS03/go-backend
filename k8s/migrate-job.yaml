@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: goconnect-backend:latest
+        command: ["migrate", "-path", "migrations", "-database", "postgres://postgres:arya@postgres:5432/goconnect?sslmode=disable", "up"]
+      restartPolicy: Never

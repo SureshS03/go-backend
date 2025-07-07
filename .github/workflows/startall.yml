@@ -17,17 +17,13 @@ jobs:
         with:
           go-version: '1.24.3'
 
-      - name: Build Go binary
-        run: go build -v ./...
-
-      - name: Build Docker image
-        run: docker build -t goconnect-backend:latest .
-
       - name: Create Minikube cluster
         uses: medyagh/setup-minikube@latest
 
-      - name: Use Minikube Docker
-        run: eval $(minikube docker-env) && docker build -t goconnect-backend:latest .
+      - name: Use Minikube Docker and Build Image
+        run: |
+          eval $(minikube docker-env)
+          docker build -t goconnect-backend:latest .
 
       - name: Apply Kubernetes manifests
         run: |
@@ -37,12 +33,11 @@ jobs:
 
       - name: Wait for pods to be ready
         run: |
-          kubectl wait --for=condition=ready pod -l app=goconnect --timeout=120s
-          kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s
+          kubectl get pods
+          kubectl wait --for=condition=ready pod -l app=goconnect --timeout=180s || kubectl describe pods -l app=goconnect
+          kubectl wait --for=condition=ready pod -l app=postgres --timeout=180s || kubectl describe pods -l app=postgres
 
       - name: Run DB Migrations
         run: |
-          kubectl run migrate-job --image=migrate/migrate \
-            --restart=OnFailure \
-            -- bash -c "migrate -path=/db/migrations -database=postgres://postgres:arya@postgres:5432/goconnect?sslmode=disable up"
-
+          kubectl apply -f k8s/migrate-job.yaml
+          kubectl wait --for=condition=complete job/migrate --timeout=90s
