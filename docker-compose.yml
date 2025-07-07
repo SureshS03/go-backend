@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  backend:
+    build: .
+    container_name: go-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - valkey
+    networks:
+      - backend-net
+
+  db:
+    image: postgres:16
+    container_name: go-db
+    restart: always
+    environment:
+      POSTGRES_USER: suresh
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: goconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend-net
+
+  valkey:
+    image: valkey/valkey:7.2
+    container_name: go-valkey
+    ports:
+      - "6379:6379"
+    networks:
+      - backend-net
+
+volumes:
+  pgdata:
+
+networks:
+  backend-net:
