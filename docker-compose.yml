@@ -1,4 +1,3 @@
-version: '3.9'
 
 services:
   backend:
@@ -19,21 +18,21 @@ services:
     container_name: go-db
     restart: always
     environment:
-      POSTGRES_USER: suresh
-      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: arya
       POSTGRES_DB: goconnect
-    ports:
-      - "5432:5432"
+    #ports:
+    #  - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgres/data
     networks:
       - backend-net
 
   valkey:
     image: valkey/valkey:7.2
     container_name: go-valkey
-    ports:
-      - "6379:6379"
+    #ports:
+    #  - "6379:6379"
     networks:
       - backend-net
 

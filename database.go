@@ -3,20 +3,23 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"time"
 	_ "github.com/lib/pq"
 )
 
 func NewDB(dn string, ds string) *sql.DB {
-	db, err := sql.Open(dn, ds)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
+	for i:=0; i <= 10; i++ {
 
-	if err := db.Ping(); err != nil {
-		fmt.Println(err)
-		return nil
+		db, err := sql.Open(dn, ds)
+		if err == nil {
+			err = db.Ping()
+			if err == nil {
+				fmt.Println("Connected to DB successfully")
+				return db
+			}
+		}
+		fmt.Println("Not Connecnted attempt",i)
+		time.Sleep(2 * time.Second)
 	}
-	fmt.Println("Connected to DB successfully")
-	return db
+	return nil
 }

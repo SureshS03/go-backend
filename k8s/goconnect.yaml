@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goconnect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goconnect
+  template:
+    metadata:
+      labels:
+        app: goconnect
+    spec:
+      containers:
+        - name: backend
+          image: goconnect-backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "arya"
+            - name: DB_NAME
+              value: "goconnect"
+            - name: REDIS_HOST
+              value: "valkey"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: goconnect-service
+spec:
+  type: NodePort
+  selector:
+    app: goconnect
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30001

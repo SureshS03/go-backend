@@ -12,7 +12,11 @@ import (
 func main() {
 	//s := fmt.Sprintf("user=%v dbname=%v password=%v sslmode=%v", os.Getenv("DB_USER"), os.Getenv("DB_NAME"), os.Getenv("PASSWORD"), os.Getenv("SSL_MODE"))
 	//fmt.Println(s)
-	db := NewDB("postgres", "user=suresh dbname=goconnect password=arya sslmode=disable")
+	db := NewDB("postgres", "host=db user=postgres dbname=goconnect password=arya sslmode=disable")
+	if db == nil {
+		fmt.Println("DB connection failed. Exiting...")
+		return
+	}
 	redis.Init()
 	defer db.Close()
 	router := NewRouter(db)
