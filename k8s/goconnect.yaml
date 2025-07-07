@@ -28,6 +28,16 @@ spec:
               value: "goconnect"
             - name: REDIS_HOST
               value: "valkey"
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
           resources:
             limits:
               memory: "512Mi"
