@@ -1,7 +1,5 @@
 package main
 
-//TODO write a docker file with backend, DB, redis all (error in docker installations)
-//docker , hosting, and kubunets ,cicd in github action
 import (
 	"fmt"
 	"net/http"
