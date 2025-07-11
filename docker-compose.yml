@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: postgres:17.5
     container_name: pg-db
     restart: always
@@ -36,7 +36,7 @@ services:
       DB_NAME: goconnect
       REDIS_ADDR: valkey:6379
     depends_on:
-      - db
+      - postgres
       - valkey
 
 volumes:
