@@ -1,1 +1,0 @@
-test kompose k8stest and k8s then correct the CI/CD
