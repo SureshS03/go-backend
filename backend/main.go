@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	db := NewDB("postgres", "postgres://postgres:arya@db:5432/goconnect?sslmode=disable")
+	db := NewDB("postgres", "postgres://postgres:arya@postgres:5432/goconnect?sslmode=disable")
 	if db == nil {
 		fmt.Println("DB connection failed. Exiting...")
 		return
