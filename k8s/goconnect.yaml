@@ -13,23 +13,11 @@ spec:
         app: go-backend
     spec:
       containers:
-        - name: go-backend
-          image: goconnect-backend:latest
-          ports:
-            - containerPort: 8080
-          env:
-            - name: DB_HOST
-              value: pg-db
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_USER
-              value: postgres
-            - name: DB_PASSWORD
-              value: arya
-            - name: DB_NAME
-              value: goconnect
-            - name: REDIS_ADDR
-              value: valkey:6379
+      - name: go-backend
+        image: go-backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -39,6 +27,6 @@ spec:
   selector:
     app: go-backend
   ports:
-    - port: 8080
-      targetPort: 8080
-  type: LoadBalancer
+  - port: 8080
+    targetPort: 8080
+  type: NodePort
