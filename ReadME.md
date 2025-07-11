@@ -18,7 +18,7 @@ GoConnect is a production-ready backend I built to deeply understand how to desi
 - **Containerization**: Docker & Docker Compose
 - **Orchestration**: Kubernetes
 - **CI/CD**: GitHub Actions
-- **Migration Management**: golang-migrate (having problems)
+- **Schema Management**: Custom Script to apply init.sql
 
 
 ### Performance & Scalability
@@ -35,8 +35,7 @@ The project includes a comprehensive CI/CD pipeline using GitHub Actions:
 1. **Build Stage**: Compiles Go binary and runs tests
 2. **Docker Stage**: Builds and tags container images
 3. **Kubernetes Stage**: Deploys to Minikube cluster
-4. **Validation Stage**: Runs health checks and integration tests
-5. **Migration Stage**: Applies database schema changes
+4. 
 
 ## Monitoring and Observability
 
