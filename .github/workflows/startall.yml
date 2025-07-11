@@ -23,21 +23,11 @@ jobs:
       - name: Use Minikube Docker and Build Image
         run: |
           eval $(minikube docker-env)
-          docker build -t goconnect-backend:latest .
+          docker build -t go-backend:latest ./backend.
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/postgres.yaml
           kubectl apply -f k8s/valkey.yaml
+          kubectl apply -f k8s/db-schema-configmap.yaml
+          kubectl apply -f k8s/postgres.yaml
           kubectl apply -f k8s/goconnect.yaml
-
-      - name: Wait for pods to be ready
-        run: |
-          kubectl get pods
-          kubectl wait --for=condition=ready pod -l app=goconnect --timeout=180s || kubectl describe pods -l app=goconnect
-          kubectl wait --for=condition=ready pod -l app=postgres --timeout=180s || kubectl describe pods -l app=postgres
-
-      - name: Run DB Migrations
-        run: |
-          kubectl apply -f k8s/migrate-job.yaml
-          kubectl wait --for=condition=complete job/migrate --timeout=90s
