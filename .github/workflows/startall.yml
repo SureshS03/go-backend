@@ -23,7 +23,7 @@ jobs:
       - name: Use Minikube Docker and Build Image
         run: |
           eval $(minikube docker-env)
-          docker build -t go-backend:latest ./backend.
+          docker build -t go-backend:latest ./backend/.
 
       - name: Apply Kubernetes manifests
         run: |
