@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,44 +25,44 @@ spec:
         app: postgres
     spec:
       containers:
-        - name: postgres
-          image: postgres:16
-          env:
-            - name: POSTGRES_HOST
-              value: db
-            - name: POSTGRES_DB
-              value: goconnect
-            - name: POSTGRES_USER
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: arya
-          ports:
-            - containerPort: 5432
-          livenessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          resources:
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-          volumeMounts:
-            - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
-              subPath: postgres
-      volumes:
+      - name: postgres
+        image: postgres:16
+        env:
+        - name: POSTGRES_DB
+          value: goconnect
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: arya
+        ports:
+        - containerPort: 5432
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        volumeMounts:
         - name: postgres-storage
-          emptyDir: {}
-
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - pg_isready -U postgres -d goconnect
+          initialDelaySeconds: 15
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-storage
+      - name: postgres-init-scripts
+        configMap:
+          name: postgres-init-schema
 ---
 apiVersion: v1
 kind: Service
@@ -60,4 +72,47 @@ spec:
   selector:
     app: postgres
   ports:
-    - port: 5432
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-schema-init
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: schema-init
+        image: postgres:16
+        env:
+        - name: PGPASSWORD
+          value: arya
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h postgres -p 5432 -U postgres; do
+            echo "PostgreSQL is unavailable - sleeping"
+            sleep 2
+          done
+          echo "PostgreSQL is up - executing schema"
+          
+          # Check if tables exist
+          if psql -h postgres -U postgres -d goconnect -c "\dt" | grep -q "users"; then
+            echo "Tables already exist, skipping schema creation"
+          else
+            echo "Creating schema..."
+            psql -h postgres -U postgres -d goconnect -f /schema/init.sql
+            echo "Schema created successfully"
+          fi
+        volumeMounts:
+        - name: postgres-init-scripts
+          mountPath: /schema
+      volumes:
+      - name: postgres-init-scripts
+        configMap:
+          name: postgres-init-schema
+  backoffLimit: 3
